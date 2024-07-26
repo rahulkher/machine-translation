@@ -1,4 +1,5 @@
 import pickle
+import re
 from typing import Optional
 import os
 from pathlib import Path
@@ -50,14 +51,17 @@ class AuthObject():
     def get_auth(self):
         return self.authobject
 
-    def adduser(self, username:str, email: Optional[str] = "", name: Optional[str] = "", password:str = "abc123"):
+    def adduser(self, username:str, email: Optional[str] = "", name: Optional[str] = "", password:str = "abc123", role: str = 'translator', status: int = 1):
         try:
             if username not in self.authobject['nameList']:
-                self.authobject['config']['credentials']['usernames'][username] = {'email':email, 'name':name, 'password':password}
-                self.authobject['nameList'].append(username)
-                with open('authobjectpickle.pkl', 'wb') as cookie:
-                    pickle.dump(obj=self.authobject, file=cookie)
-                return {'message':f"User {username} added to auth object"}
+                if re.match(pattern='[\w*]@[\w*].[\w]', string=email):
+                    self.authobject['config']['credentials']['usernames'][username] = {'email':email, 'name':name, 'password':password, 'role':role, 'status':status}
+                    self.authobject['nameList'].append(username)
+                    with open('authobjectpickle.pkl', 'wb') as cookie:
+                        pickle.dump(obj=self.authobject, file=cookie)
+                    return {'message':f"User {username} added to auth object"}
+                else:
+                    return {'message':f"Incorrect email format"}
             else:
                 return {'message':f"User {username} already exists"}
         except Exception as e:
@@ -80,6 +84,9 @@ class AuthObject():
         with open('authobjectpickle.pkl', 'wb') as cookie:
             pickle.dump(obj=self.authobject, file=cookie)
         return {'message':'Auth object updated'}
+    
+    def list_users(self):
+        return
 
 
     
@@ -87,4 +94,21 @@ class AuthObject():
 
 
 if __name__=="__main__":
-    pass
+    # Test code
+
+    app_auth_object = AuthObject()
+    print(app_auth_object.get_auth())
+
+    print()
+
+    add_status = app_auth_object.adduser(
+        username='rahulkher',
+        email='rahul.kher22gmail.com',
+        name='rahul',
+        password='R@#ulk#er123',
+        role='sub-admin',
+    )
+
+    print(add_status['message'])
+
+    print(app_auth_object.get_auth())
